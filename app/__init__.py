@@ -40,22 +40,29 @@ def create_app():
     app.register_blueprint(api_bp, url_prefix='/api')
 
     with app.app_context():
-        # Only create tables and seed in development
-        if os.getenv('FLASK_ENV') != 'production':
+        from sqlalchemy import inspect
+        from app.models import User
+        from werkzeug.security import generate_password_hash
+        
+        # Check if tables exist before creating (idempotent)
+        inspector = inspect(db.engine)
+        existing_tables = inspector.get_table_names()
+        
+        if not existing_tables:
+            # First deployment - create all tables
             db.create_all()
-
-            # Seed default users only if the table is empty
-            from app.models import User
-            from werkzeug.security import generate_password_hash
-
-            if User.query.count() == 0:
-                users = [
-                    User(username='admin', password_hash=generate_password_hash('admin123')),
-                    User(username='user', password_hash=generate_password_hash('user123')),
-                ]
-                for user in users:
-                    db.session.add(user)
-                db.session.commit()
-                print("Seeded default users")
+            print("Database tables created")
+            
+            # Seed default users in production too (but only on first run)
+            users = [
+                User(username='admin', password_hash=generate_password_hash('admin123')),
+                User(username='student1', password_hash=generate_password_hash('Password123')),
+            ]
+            for user in users:
+                db.session.add(user)
+            db.session.commit()
+            print("Seeded default users")
+        else:
+            print(f"Tables already exist: {existing_tables}")
 
     return app
