@@ -1,7 +1,11 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
+
 from urllib.parse import quote_plus  # Used to safely encode password
 
 db = SQLAlchemy()
@@ -16,6 +20,12 @@ def create_app():
     db_user = os.getenv('DATABASE_USER')
     db_password = os.getenv('DATABASE_PASSWORD')
 
+    print("DATABASE_HOST =", os.getenv("DATABASE_HOST"))
+    print("DATABASE_PORT =", os.getenv("DATABASE_PORT"))
+    print("DATABASE_NAME =", os.getenv("DATABASE_NAME"))
+    print("DATABASE_USER =", os.getenv("DATABASE_USER"))
+    print("DATABASE_PASSWORD exists =", bool(os.getenv("DATABASE_PASSWORD")))
+    
     if db_host and db_user and db_name and db_password:
         # Build secure PostgreSQL URI using the real RDS values
         # quote_plus ensures special characters in password are handled correctly
